@@ -1,28 +1,32 @@
 # STM32H523CC host platform
 
-Bare-metal host-platform drivers for the STM32H523CC. This branch ports the
-STM32L452 timer/DMA ST1Wire implementation to the STM32H5 GPDMA architecture.
-The ST1Wire timing path is intended for 3-contact (3C) mode; the retained 2C
-protocol branches are not a supported or validated target.
+Bare-metal ST1Wire host-platform drivers for the STM32H523CC. This branch ports
+the STM32L452 timer/DMA implementation to the STM32H5 GPDMA architecture. It is
+an ST1Wire-only platform: I2C support is intentionally excluded. The timing path
+is intended for 3-contact (3C) mode; the retained 2C protocol branches are not a
+supported or validated target.
 
 ## Pin and peripheral assignment
 
 | Function | STM32H523CC resource | Notes |
 | --- | --- | --- |
 | ST1Wire | PB8, AF2 | Open-drain, external pull-up required |
+| Delay and timeout timebase | TIM4_CH1 | Polled compare, no pin or interrupt |
 | ST1Wire transmit | TIM4_CH3 | Output-compare toggle |
 | ST1Wire receive | TIM4_CH4 | Indirect TI3 capture on both edges |
 | ST1Wire capture DMA | GPDMA1 channel 0, request 86 | TIM4_CH4 to memory |
 | ST1Wire output DMA | GPDMA1 channel 1, request 85 | Memory to TIM4_CH3 |
-| I2C1 | PB6/PB7, AF4 | Moved from PB8/PB9 to avoid ST1Wire conflict |
 | USART2 | PA2/PA3, AF7 | Polling driver |
-| Microsecond delay/timeout | TIM6 | 16-bit timer at 1 MHz |
-| Millisecond delay/timeout | TIM2 | 32-bit timer at 1 MHz |
 | Power controls | PB0, PC0, PC1 | Open-drain outputs |
 
-TIM4 runs with a 1 MHz counter, so the existing 3C values remain expressed in
-microseconds. The DMA implementation programs H5 GPDMA block lengths in bytes
-and converts the remaining byte count back to captured halfwords for the PHY.
+TIM4 runs with a 1 MHz, 16-bit free-running counter. CH1 supplies blocking
+microsecond delays, ST1Wire timeouts, and the millisecond delay callback required
+by STSELib for device boot and polling retries. Long millisecond delays are split
+into wrap-safe CH1 compare intervals. CH3 and CH4 remain dedicated to the
+timer/DMA waveform and capture path. No TIM2 or TIM6 resources are used.
+
+Configure STSELib with `STSE_CONF_USE_ST1WIRE` and without
+`STSE_CONF_USE_I2C`.
 
 ## CMSIS and memory
 

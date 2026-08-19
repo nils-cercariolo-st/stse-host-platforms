@@ -4,8 +4,7 @@
  * \author STMicroelectronics SMD Application Team
  *****************************************************************************/
 
-#include "Drivers/delay_ms/delay_ms.h"
-#include "Drivers/delay_us/delay_us.h"
+#include "Drivers/st1wire/st1wire_timer.h"
 #include "stm32h5xx.h"
 
 extern uint32_t SystemCoreClock;
@@ -26,8 +25,6 @@ void st1wire_platform_init(void) {
     GPIOB->MODER &= ~GPIO_MODER_MODE8_Msk;
     GPIOB->MODER |= (1UL << GPIO_MODER_MODE8_Pos);
 
-    delay_us_init();
-    delay_ms_init();
 }
 
 void st1wire_platform_deinit(void) {
@@ -65,12 +62,7 @@ void st1wire_platform_io_out(uint8_t bus_addr) {
 }
 
 void st1wire_platform_delay(uint32_t delay) {
-    while (delay > UINT16_MAX) {
-        delay_us(UINT16_MAX);
-        delay -= UINT16_MAX;
-    }
-
-    delay_us((uint16_t)delay);
+    st1wire_timer_delay_us(delay);
 }
 
 void st1wire_platform_wake(uint8_t bus_addr) {
@@ -81,9 +73,9 @@ void st1wire_platform_wake(uint8_t bus_addr) {
 }
 
 void st1wire_platform_start_timeout(uint32_t timeout) {
-    timeout_us_start((uint16_t)timeout);
+    st1wire_timer_timeout_start((uint16_t)timeout);
 }
 
 int8_t st1wire_platform_is_timeout_exceeded(void) {
-    return timeout_us_get_status();
+    return st1wire_timer_timeout_expired();
 }

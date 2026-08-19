@@ -1,12 +1,16 @@
 /**
  ******************************************************************************
  * \file    st1wire_timer.c
- * \brief   STM32H523 ST1Wire TIM4 backend (PB8, CH3 output, CH4 capture)
+ * \brief   STM32H523 ST1Wire TIM4 backend (CH1 timebase, CH3 TX, CH4 RX)
  ******************************************************************************
  */
 
 #include "st1wire_timer.h"
 #include "stm32h5xx.h"
+
+static uint16_t timeout_start_count;
+static uint16_t timeout_ticks;
+static uint8_t timeout_active;
 
 
 static uint32_t get_tim4_clock(void)
@@ -60,6 +64,44 @@ static void configure_pin(void)
 }
 
 
+static void configure_timebase(void)
+{
+    uint32_t timer_clock = get_tim4_clock();
+
+    TIM4->CR1 = 0U;
+    TIM4->PSC =
+        (timer_clock / ST1WIRE_TIMER_FREQUENCY_HZ) - 1UL;
+    TIM4->ARR = 0xFFFFU;
+    TIM4->CNT = 0U;
+    TIM4->EGR = TIM_EGR_UG;
+    TIM4->SR = 0U;
+}
+
+
+static void clear_channel_1_flag(void)
+{
+    TIM4->SR &= ~TIM_SR_CC1IF;
+}
+
+
+static void wait_channel_1(uint16_t ticks)
+{
+    uint16_t start;
+
+    clear_channel_1_flag();
+    start = (uint16_t)TIM4->CNT;
+    TIM4->CCR1 = (uint16_t)(start + ticks);
+
+    /* The elapsed check also covers an exceptionally late CCR1 write. */
+    while (((TIM4->SR & TIM_SR_CC1IF) == 0U) &&
+           ((uint16_t)((uint16_t)TIM4->CNT - start) < ticks))
+    {
+    }
+
+    clear_channel_1_flag();
+}
+
+
 void st1wire_timer_init(void)
 {
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
@@ -69,6 +111,7 @@ void st1wire_timer_init(void)
     (void)RCC->APB1LENR;
 
     st1wire_timer_stop();
+    configure_timebase();
 }
 
 
@@ -81,18 +124,9 @@ void st1wire_timer_deinit(void)
 
 void st1wire_timer_prepare(void)
 {
-    uint32_t timer_clock;
-
     st1wire_timer_stop();
     configure_pin();
-
-    timer_clock = get_tim4_clock();
-
-    TIM4->PSC =
-        (timer_clock / ST1WIRE_TIMER_FREQUENCY_HZ) - 1UL;
-
-    TIM4->ARR = 0xFFFFU;
-    TIM4->CNT = 0U;
+    configure_timebase();
     TIM4->CR1 = 0U;
     TIM4->CR2 = 0U;
     TIM4->SMCR = 0U;
@@ -121,6 +155,7 @@ void st1wire_timer_stop(void)
     TIM4->DIER = 0U;
     TIM4->CCER = 0U;
     TIM4->SR = 0U;
+    timeout_active = 0U;
 }
 
 
@@ -157,4 +192,75 @@ void st1wire_timer_start(void)
 uint16_t st1wire_timer_get_counter(void)
 {
     return (uint16_t)TIM4->CNT;
+}
+
+
+void st1wire_timer_delay_us(uint32_t delay)
+{
+    uint8_t started_here;
+
+    if (delay == 0U)
+    {
+        return;
+    }
+
+    /* CH1 is shared by blocking delays and the single outstanding timeout. */
+    timeout_active = 0U;
+    started_here = ((TIM4->CR1 & TIM_CR1_CEN) == 0U) ? 1U : 0U;
+
+    if (started_here != 0U)
+    {
+        TIM4->CR1 |= TIM_CR1_CEN;
+    }
+
+    while (delay > UINT16_MAX)
+    {
+        wait_channel_1(UINT16_MAX);
+        delay -= UINT16_MAX;
+    }
+
+    wait_channel_1((uint16_t)delay);
+
+    if (started_here != 0U)
+    {
+        TIM4->CR1 &= ~TIM_CR1_CEN;
+    }
+}
+
+
+void st1wire_timer_timeout_start(uint16_t timeout)
+{
+    timeout_ticks = (timeout == 0U) ? 1U : timeout;
+    timeout_active = 1U;
+
+    if ((TIM4->CR1 & TIM_CR1_CEN) == 0U)
+    {
+        TIM4->CR1 |= TIM_CR1_CEN;
+    }
+
+    clear_channel_1_flag();
+    timeout_start_count = (uint16_t)TIM4->CNT;
+    TIM4->CCR1 = (uint16_t)(timeout_start_count + timeout_ticks);
+}
+
+
+int8_t st1wire_timer_timeout_expired(void)
+{
+    uint16_t elapsed;
+
+    if (timeout_active == 0U)
+    {
+        return 0;
+    }
+
+    elapsed = (uint16_t)((uint16_t)TIM4->CNT - timeout_start_count);
+
+    if (((TIM4->SR & TIM_SR_CC1IF) != 0U) || (elapsed >= timeout_ticks))
+    {
+        timeout_active = 0U;
+        clear_channel_1_flag();
+        return 1;
+    }
+
+    return 0;
 }

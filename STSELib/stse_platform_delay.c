@@ -15,18 +15,17 @@
  ******************************************************************************
  */
 
-#include "Drivers/delay_ms/delay_ms.h"
-#include "Drivers/delay_us/delay_us.h"
+#include "Drivers/st1wire/st1wire_timer.h"
 #include "stse_conf.h"
 #include "stselib.h"
 
 stse_ReturnCode_t stse_platform_delay_init(void) {
     /* Initialize platform Drivers used by PAL */
-    delay_ms_init();
+    st1wire_timer_init();
 
     return STSE_OK;
 }
 
 void stse_platform_Delay_ms(PLAT_UI16 delay_val) {
-    delay_ms(delay_val);
+    st1wire_timer_delay_us((uint32_t)delay_val * 1000UL);
 }

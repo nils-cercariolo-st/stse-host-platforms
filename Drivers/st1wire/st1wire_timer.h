@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * \file    st1wire_timer.h
- * \brief   STM32H523 ST1Wire TIM4 backend
+ * \brief   STM32H523 ST1Wire TIM4 backend (CH1 timebase, CH3 TX, CH4 RX)
  ******************************************************************************
  */
 
@@ -30,5 +30,11 @@ void st1wire_timer_enable_dma_requests(void);
 void st1wire_timer_start(void);
 
 uint16_t st1wire_timer_get_counter(void);
+
+void st1wire_timer_delay_us(uint32_t delay);
+
+void st1wire_timer_timeout_start(uint16_t timeout);
+
+int8_t st1wire_timer_timeout_expired(void);
 
 #endif /* ST1WIRE_TIMER_H_ */
