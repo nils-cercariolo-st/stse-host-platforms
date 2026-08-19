@@ -1,12 +1,12 @@
 /**
  ******************************************************************************
- * \brief  ST1Wire Platform Hardware abstraction layer for G0C1RE_NUCLEO
+ * \brief  STM32H523 ST1Wire platform abstraction for PB8
  * \author STMicroelectronics SMD Application Team
  *****************************************************************************/
 
 #include "Drivers/delay_ms/delay_ms.h"
 #include "Drivers/delay_us/delay_us.h"
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 
 extern uint32_t SystemCoreClock;
 volatile uint32_t st1wire_ref_cpu_cycles = 0;
@@ -14,15 +14,17 @@ volatile uint32_t st1wire_ref_cpu_cycles = 0;
 /* ---------- Static Platform Abstraction layer Declarations ---------- */
 
 void st1wire_platform_init(void) {
-    /* - Initialize PA9 (ST1Wire line) as open-drain output */
-    GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPD9_Msk);
-    GPIOA->OTYPER |= 1 << 9;
-    GPIOA->ODR |= 1 << 9;
-    GPIOA->OSPEEDR |= (0b11 << GPIO_OSPEEDR_OSPEED9_Pos);
-    GPIOA->MODER &= ~(GPIO_MODER_MODE9_Msk);
-    GPIOA->MODER |= (0b01 << GPIO_MODER_MODE9_Pos);
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+    (void)RCC->AHB2ENR;
 
-    GPIOB->ODR &= ~(1 << GPIO_ODR_OD0_Pos);
+    /* Initialize PB8 (ST1Wire line) as released open-drain output. */
+    GPIOB->PUPDR &= ~GPIO_PUPDR_PUPD8_Msk;
+    GPIOB->OTYPER |= GPIO_OTYPER_OT8;
+    GPIOB->BSRR = GPIO_BSRR_BS8;
+    GPIOB->OSPEEDR &= ~GPIO_OSPEEDR_OSPEED8_Msk;
+    GPIOB->OSPEEDR |= (3UL << GPIO_OSPEEDR_OSPEED8_Pos);
+    GPIOB->MODER &= ~GPIO_MODER_MODE8_Msk;
+    GPIOB->MODER |= (1UL << GPIO_MODER_MODE8_Pos);
 
     delay_us_init();
     delay_ms_init();
@@ -33,18 +35,18 @@ void st1wire_platform_deinit(void) {
 }
 
 void st1wire_platform_io_set(uint8_t bus_addr) {
-    /* SET IO bit-field in Output data register */
-    GPIOA->ODR |= (1 << 9);
+    (void)bus_addr;
+    GPIOB->BSRR = GPIO_BSRR_BS8;
 }
 
 void st1wire_platform_io_clear(uint8_t bus_addr) {
-    /* Clear IO bit-field in Output data register */
-    GPIOA->ODR &= ~(1 << 9);
+    (void)bus_addr;
+    GPIOB->BSRR = GPIO_BSRR_BR8;
 }
 
 uint8_t st1wire_platform_io_get(uint8_t bus_addr) {
-    /* Return PA9 Status from Input Data register */
-    if ((GPIOA->IDR & 1 << 9) != 0) {
+    (void)bus_addr;
+    if ((GPIOB->IDR & GPIO_IDR_ID8) != 0U) {
         return 1;
     } else {
         return 0;
@@ -52,17 +54,23 @@ uint8_t st1wire_platform_io_get(uint8_t bus_addr) {
 }
 
 void st1wire_platform_io_in(uint8_t bus_addr) {
-    /* Set PA9 as input */
-    GPIOA->MODER &= ~(GPIO_MODER_MODE9_Msk);
+    (void)bus_addr;
+    GPIOB->MODER &= ~GPIO_MODER_MODE8_Msk;
 }
 
 void st1wire_platform_io_out(uint8_t bus_addr) {
-    /* Set PA9 as output */
-    GPIOA->MODER |= (0b01 << GPIO_MODER_MODE9_Pos);
+    (void)bus_addr;
+    GPIOB->MODER &= ~GPIO_MODER_MODE8_Msk;
+    GPIOB->MODER |= (1UL << GPIO_MODER_MODE8_Pos);
 }
 
 void st1wire_platform_delay(uint32_t delay) {
-    delay_us(delay);
+    while (delay > UINT16_MAX) {
+        delay_us(UINT16_MAX);
+        delay -= UINT16_MAX;
+    }
+
+    delay_us((uint16_t)delay);
 }
 
 void st1wire_platform_wake(uint8_t bus_addr) {
@@ -73,7 +81,7 @@ void st1wire_platform_wake(uint8_t bus_addr) {
 }
 
 void st1wire_platform_start_timeout(uint32_t timeout) {
-    timeout_us_start(timeout);
+    timeout_us_start((uint16_t)timeout);
 }
 
 int8_t st1wire_platform_is_timeout_exceeded(void) {

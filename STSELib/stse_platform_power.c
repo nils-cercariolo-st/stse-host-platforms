@@ -15,22 +15,28 @@
  ******************************************************************************
  */
 
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 #include "stse_conf.h"
 #include "stselib.h"
 
 stse_ReturnCode_t stse_platform_power_init(void) {
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN;
+    (void)RCC->AHB2ENR;
+
     /* -Initialize power line control (PC0  - open-drain) */
+    GPIOC->OTYPER |= GPIO_OTYPER_OT0;
     GPIOC->MODER &= ~(GPIO_MODER_MODE0_Msk);
     GPIOC->MODER |= (1 << GPIO_MODER_MODE0_Pos);
     GPIOC->ODR &= ~(1 << GPIO_ODR_OD0_Pos);
 
     /* -Initialize power line control (PC1  - open-drain) */
+    GPIOC->OTYPER |= GPIO_OTYPER_OT1;
     GPIOC->MODER &= ~(GPIO_MODER_MODE1_Msk);
     GPIOC->MODER |= (1 << GPIO_MODER_MODE1_Pos);
     GPIOC->ODR &= ~(1 << GPIO_ODR_OD1_Pos);
 
     /* -Initialize power line control (PB0  - open-drain) */
+    GPIOB->OTYPER |= GPIO_OTYPER_OT0;
     GPIOB->MODER &= ~(GPIO_MODER_MODE0_Msk);
     GPIOB->MODER |= (1 << GPIO_MODER_MODE0_Pos);
     GPIOB->ODR &= ~(1 << GPIO_ODR_OD0_Pos);

@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	i2c.h
- * \brief   I2C driver for STM32L452
+ * \brief   I2C driver for STM32H523
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************
@@ -17,7 +17,7 @@
 #ifndef DRIVERS_I2C_I2C_H_
 #define DRIVERS_I2C_I2C_H_
 
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 
 uint8_t i2c_init(I2C_TypeDef *pI2C);
 void i2c_deinit(I2C_TypeDef *pI2C);

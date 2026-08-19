@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 
 #define PLAT_UI8 uint8_t
 #define PLAT_UI16 uint16_t

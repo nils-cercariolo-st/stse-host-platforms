@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	rng.c
- * \brief   Random Number Generator driver for STM32L452
+ * \brief   Random Number Generator driver for STM32H523
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************
@@ -18,7 +18,15 @@
 #include "Drivers/rng/rng.h"
 
 void rng_start(void) {
-    RNG->CR |= (RNG_CR_RNGEN | 1 << 5);
+    RCC->CR |= RCC_CR_HSI48ON;
+    while ((RCC->CR & RCC_CR_HSI48RDY) == 0U) {
+    }
+
+    RCC->CCIPR5 &= ~RCC_CCIPR5_RNGSEL_Msk;
+    RCC->AHB2ENR |= RCC_AHB2ENR_RNGEN;
+    (void)RCC->AHB2ENR;
+
+    RNG->CR |= RNG_CR_CED | RNG_CR_RNGEN;
 }
 
 uint32_t rng_generate_random_number(void) {

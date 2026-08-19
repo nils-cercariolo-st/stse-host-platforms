@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	rng.h
- * \brief   Random Number Generator driver for STM32L452
+ * \brief   Random Number Generator driver for STM32H523
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************
@@ -18,7 +18,7 @@
 #ifndef RNG_H_
 #define RNG_H_
 
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 
 void rng_start(void);
 uint32_t rng_generate_random_number(void);

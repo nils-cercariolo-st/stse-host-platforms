@@ -1,77 +1,72 @@
 /**
  ******************************************************************************
  * \file    st1wire_timer.c
- * \brief   STM32L452 ST1Wire timer backend
+ * \brief   STM32H523 ST1Wire TIM4 backend (PB8, CH3 output, CH4 capture)
  ******************************************************************************
  */
 
 #include "st1wire_timer.h"
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 
 
-static uint32_t get_tim1_clock(void)
+static uint32_t get_tim4_clock(void)
 {
-    uint32_t ppre2;
+    uint32_t ppre1;
     uint32_t divider;
-    uint32_t pclk2;
+    uint32_t pclk1;
 
-    ppre2 =
-        (RCC->CFGR & RCC_CFGR_PPRE2_Msk)
-        >> RCC_CFGR_PPRE2_Pos;
+    ppre1 =
+        (RCC->CFGR2 & RCC_CFGR2_PPRE1_Msk) >>
+        RCC_CFGR2_PPRE1_Pos;
 
-    if (ppre2 < 4U)
+    if (ppre1 < 4U)
     {
         return SystemCoreClock;
     }
 
-    divider =
-        1UL << (ppre2 - 3U);
+    divider = 1UL << (ppre1 - 3U);
+    pclk1 = SystemCoreClock / divider;
 
-    pclk2 =
-        SystemCoreClock / divider;
+    /* TIMPRE=0 gives 2 x PCLK when the APB prescaler is not one. */
+    if ((RCC->CFGR1 & RCC_CFGR1_TIMPRE) == 0U)
+    {
+        return pclk1 * 2UL;
+    }
 
-    return pclk2 * 2UL;
+    /* TIMPRE=1 gives HCLK up to APB /4, otherwise 4 x PCLK. */
+    return (divider <= 4UL)
+        ? SystemCoreClock
+        : pclk1 * 4UL;
 }
 
 
 static void configure_pin(void)
 {
-    GPIOA->OTYPER |=
-        (1UL << 9U);
+    /* Release the open-drain line before assigning PB8 to TIM4_CH3. */
+    GPIOB->BSRR = GPIO_BSRR_BS8;
 
-    GPIOA->OSPEEDR &=
-        ~(3UL << GPIO_OSPEEDR_OSPEED9_Pos);
+    GPIOB->OTYPER |= GPIO_OTYPER_OT8;
 
-    GPIOA->OSPEEDR |=
-        (3UL << GPIO_OSPEEDR_OSPEED9_Pos);
+    GPIOB->OSPEEDR &= ~GPIO_OSPEEDR_OSPEED8_Msk;
+    GPIOB->OSPEEDR |= (3UL << GPIO_OSPEEDR_OSPEED8_Pos);
 
-    GPIOA->PUPDR &=
-        ~(3UL << GPIO_PUPDR_PUPD9_Pos);
+    GPIOB->PUPDR &= ~GPIO_PUPDR_PUPD8_Msk;
 
-    GPIOA->AFR[1] &=
-        ~(0xFUL << 4U);
+    GPIOB->AFR[1] &= ~GPIO_AFRH_AFSEL8_Msk;
+    GPIOB->AFR[1] |= (2UL << GPIO_AFRH_AFSEL8_Pos);
 
-    GPIOA->AFR[1] |=
-        (0x1UL << 4U);
-
-    GPIOA->MODER &=
-        ~(3UL << GPIO_MODER_MODE9_Pos);
-
-    GPIOA->MODER |=
-        (2UL << GPIO_MODER_MODE9_Pos);
+    GPIOB->MODER &= ~GPIO_MODER_MODE8_Msk;
+    GPIOB->MODER |= (2UL << GPIO_MODER_MODE8_Pos);
 }
 
 
 void st1wire_timer_init(void)
 {
-    RCC->AHB2ENR |=
-        RCC_AHB2ENR_GPIOAEN;
-
-    RCC->APB2ENR |=
-        RCC_APB2ENR_TIM1EN;
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+    RCC->APB1LENR |= RCC_APB1LENR_TIM4EN;
 
     (void)RCC->AHB2ENR;
-    (void)RCC->APB2ENR;
+    (void)RCC->APB1LENR;
 
     st1wire_timer_stop();
 }
@@ -91,107 +86,75 @@ void st1wire_timer_prepare(void)
     st1wire_timer_stop();
     configure_pin();
 
-    timer_clock =
-        get_tim1_clock();
+    timer_clock = get_tim4_clock();
 
-    TIM1->PSC =
-        (timer_clock /
-         ST1WIRE_TIMER_FREQUENCY_HZ) - 1UL;
+    TIM4->PSC =
+        (timer_clock / ST1WIRE_TIMER_FREQUENCY_HZ) - 1UL;
 
-    TIM1->ARR =
-        0xFFFFU;
+    TIM4->ARR = 0xFFFFU;
+    TIM4->CNT = 0U;
+    TIM4->CR1 = 0U;
+    TIM4->CR2 = 0U;
+    TIM4->SMCR = 0U;
+    TIM4->CCMR1 = 0U;
 
-    TIM1->CNT =
-        0U;
+    /* CH3 toggles PB8. CH4 indirectly captures TI3 on both edges. */
+    TIM4->CCMR2 =
+        (3UL << TIM_CCMR2_OC3M_Pos) |
+        (2UL << TIM_CCMR2_CC4S_Pos);
 
-    TIM1->CR1 =
-        0U;
+    TIM4->CCER =
+        TIM_CCER_CC3E |
+        TIM_CCER_CC3P |
+        TIM_CCER_CC4E |
+        TIM_CCER_CC4P |
+        TIM_CCER_CC4NP;
 
-    TIM1->CR2 =
-        0U;
-
-    TIM1->SMCR =
-        0U;
-
-    /* CH1 captures TI2, CH2 is output-compare toggle */
-    TIM1->CCMR1 =
-        (2UL << TIM_CCMR1_CC1S_Pos) |
-        (3UL << TIM_CCMR1_OC2M_Pos);
-
-    TIM1->CCER =
-        TIM_CCER_CC1E |
-        TIM_CCER_CC1P |
-        TIM_CCER_CC1NP |
-        TIM_CCER_CC2E |
-        TIM_CCER_CC2P;
-
-    TIM1->BDTR |=
-        TIM_BDTR_MOE;
-
-    TIM1->EGR =
-        TIM_EGR_UG;
-
-    TIM1->SR =
-        0U;
+    TIM4->EGR = TIM_EGR_UG;
+    TIM4->SR = 0U;
 }
 
 
 void st1wire_timer_stop(void)
 {
-    TIM1->CR1 &=
-        ~TIM_CR1_CEN;
-
-    TIM1->DIER =
-        0U;
-
-    TIM1->CCER =
-        0U;
-
-    TIM1->BDTR &=
-        ~TIM_BDTR_MOE;
-
-    TIM1->SR =
-        0U;
+    TIM4->CR1 &= ~TIM_CR1_CEN;
+    TIM4->DIER = 0U;
+    TIM4->CCER = 0U;
+    TIM4->SR = 0U;
 }
 
 
 void st1wire_timer_release_pin(void)
 {
-    GPIOA->MODER &=
-        ~GPIO_MODER_MODE9_Msk;
+    /* Input mode releases the external pull-up controlled ST1Wire bus. */
+    GPIOB->MODER &= ~GPIO_MODER_MODE8_Msk;
 }
 
 
 void st1wire_timer_set_compare(
     uint16_t compare)
 {
-    TIM1->CCR2 =
-        compare;
+    TIM4->CCR3 = compare;
 }
 
 
 void st1wire_timer_enable_dma_requests(void)
 {
-    TIM1->DIER =
-        TIM_DIER_CC1DE |
-        TIM_DIER_CC2DE;
+    TIM4->DIER =
+        TIM_DIER_CC3DE |
+        TIM_DIER_CC4DE;
 }
 
 
 void st1wire_timer_start(void)
 {
-    TIM1->CNT =
-        0U;
-
-    TIM1->SR =
-        0U;
-
-    TIM1->CR1 |=
-        TIM_CR1_CEN;
+    TIM4->CNT = 0U;
+    TIM4->SR = 0U;
+    TIM4->CR1 |= TIM_CR1_CEN;
 }
 
 
 uint16_t st1wire_timer_get_counter(void)
 {
-    return (uint16_t)TIM1->CNT;
+    return (uint16_t)TIM4->CNT;
 }

@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	delay_us.h
- * \brief   Microsecond delay driver for STM32L452
+ * \brief   Microsecond delay driver for STM32H523
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************
@@ -18,7 +18,7 @@
 #ifndef DELAY_US_H_
 #define DELAY_US_H_
 
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 
 void delay_us_init(void);
 void delay_us(uint16_t us);

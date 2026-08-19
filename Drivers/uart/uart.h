@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	uart.h
- * \brief   UART driver for STM32L452
+ * \brief   UART driver for STM32H523
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************
@@ -18,7 +18,7 @@
 #ifndef UART_H_
 #define UART_H_
 
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 
 void uart_init(uint32_t baudrate);
 void uart_putc(uint8_t c);

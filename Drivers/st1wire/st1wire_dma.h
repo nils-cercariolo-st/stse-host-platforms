@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * \file    st1wire_dma.h
- * \brief   STM32L452 ST1Wire DMA backend
+ * \brief   STM32H523 ST1Wire GPDMA backend
  ******************************************************************************
  */
 
@@ -10,8 +10,8 @@
 
 #include <stdint.h>
 
-#define ST1WIRE_DMA_CAPTURE_REQUEST          7U
-#define ST1WIRE_DMA_OUTPUT_REQUEST           7U
+#define ST1WIRE_DMA_CAPTURE_REQUEST          86U /* GPDMA1 TIM4_CH4 */
+#define ST1WIRE_DMA_OUTPUT_REQUEST           85U /* GPDMA1 TIM4_CH3 */
 
 void st1wire_dma_init(void);
 

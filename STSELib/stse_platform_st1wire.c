@@ -19,7 +19,7 @@
 #include <string.h>
 
 #include "core/stse_platform.h"
-#include "drivers/st1wire/st1wire.h"
+#include "Drivers/st1wire/st1wire.h"
 #include <stdlib.h>
 
 #ifdef STSE_CONF_USE_ST1WIRE

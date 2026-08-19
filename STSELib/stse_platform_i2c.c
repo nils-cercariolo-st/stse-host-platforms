@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "core/stse_platform.h"
-#include "drivers/i2c/I2C.h"
+#include "Drivers/i2c/I2C.h"
 
 //#define STSE_PLATFORM_I2C_DYNAMIC_BUFFER_ALLOCATION
 

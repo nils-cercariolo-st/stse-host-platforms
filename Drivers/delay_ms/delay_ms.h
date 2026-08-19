@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	delay_ms.h
- * \brief   Millisecond delay driver for STM32L452
+ * \brief   Millisecond delay driver for STM32H523
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************
@@ -18,7 +18,7 @@
 #ifndef DELAY_MS_H_
 #define DELAY_MS_H_
 
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 
 void delay_ms_init(void);
 void delay_ms(uint16_t ms);

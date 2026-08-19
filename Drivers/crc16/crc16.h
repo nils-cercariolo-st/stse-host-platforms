@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	crc16.h
- * \brief   CRC16 driver for STM32L452
+ * \brief   CRC16 driver for STM32H523
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************
@@ -18,7 +18,7 @@
 #ifndef CRC16_H_
 #define CRC16_H_
 
-#include "stm32l4xx.h"
+#include "stm32h5xx.h"
 
 //#define CRC16_HW_IMP
 

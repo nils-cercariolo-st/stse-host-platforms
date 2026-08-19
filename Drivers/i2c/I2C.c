@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	i2c.c
- * \brief   I2C driver for STM32L452
+ * \brief   I2C driver for STM32H523
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************
@@ -15,7 +15,7 @@
  ******************************************************************************
  */
 
-#include "Drivers/i2c/i2c.h"
+#include "Drivers/i2c/I2C.h"
 #include "Drivers/delay_ms/delay_ms.h"
 
 static uint16_t i2c_speed = 100;
@@ -26,6 +26,33 @@ void i2c_deinit(I2C_TypeDef *pI2C) {
 }
 
 uint8_t i2c_init(I2C_TypeDef *pI2C) {
+    if (pI2C != I2C1) {
+        return 1U;
+    }
+
+    RCC->CR |= RCC_CR_HSION | RCC_CR_HSIKERON;
+    while ((RCC->CR & RCC_CR_HSIRDY) == 0U) {
+    }
+
+    /* Keep I2C1 at 64 MHz HSI even if the APB clock is changed later. */
+    RCC->CCIPR4 &= ~RCC_CCIPR4_I2C1SEL_Msk;
+    RCC->CCIPR4 |= (2UL << RCC_CCIPR4_I2C1SEL_Pos);
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+    RCC->APB1LENR |= RCC_APB1LENR_I2C1EN;
+    (void)RCC->APB1LENR;
+
+    /* PB6=I2C1_SCL and PB7=I2C1_SDA (AF4); PB8 is reserved for ST1Wire. */
+    GPIOB->AFR[0] &= ~(GPIO_AFRL_AFSEL6_Msk | GPIO_AFRL_AFSEL7_Msk);
+    GPIOB->AFR[0] |=
+        (4UL << GPIO_AFRL_AFSEL6_Pos) |
+        (4UL << GPIO_AFRL_AFSEL7_Pos);
+    GPIOB->OTYPER |= GPIO_OTYPER_OT6 | GPIO_OTYPER_OT7;
+    GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD6_Msk | GPIO_PUPDR_PUPD7_Msk);
+    GPIOB->MODER &= ~(GPIO_MODER_MODE6_Msk | GPIO_MODER_MODE7_Msk);
+    GPIOB->MODER |=
+        (2UL << GPIO_MODER_MODE6_Pos) |
+        (2UL << GPIO_MODER_MODE7_Pos);
+
     /* - Clear PE bit */
     pI2C->CR1 &= ~(I2C_CR1_PE);
 
@@ -35,14 +62,14 @@ uint8_t i2c_init(I2C_TypeDef *pI2C) {
                  (0b1 << I2C_CR1_NOSTRETCH_Pos); // Clock stretching disabled
 
     if (i2c_speed == 400) {
-        /* - Set I2C1 Timings for 400kHz (Fast mode) */
+        /* I2C1 timing for a 64 MHz HSI kernel clock, 400 kHz fast mode. */
         pI2C->TIMINGR = (0x01 << I2C_TIMINGR_PRESC_Pos) |
                         (0x26 << I2C_TIMINGR_SCLL_Pos) |
                         (0x1D << I2C_TIMINGR_SCLH_Pos) |
                         (0x01 << I2C_TIMINGR_SDADEL_Pos) |
                         (0x0A << I2C_TIMINGR_SCLDEL_Pos);
     } else {
-        /* - Set I2C1 Timings for 100kHz (Standard mode) */
+        /* I2C1 timing for a 64 MHz HSI kernel clock, 100 kHz standard mode. */
         pI2C->TIMINGR = (0x03 << I2C_TIMINGR_PRESC_Pos) |
                         (0x50 << I2C_TIMINGR_SCLL_Pos) |
                         (0x47 << I2C_TIMINGR_SCLH_Pos) |
