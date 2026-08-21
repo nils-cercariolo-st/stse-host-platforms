@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	rng.c
- * \brief   Random Number Generator driver for STM32H523
+ * \brief   Random Number Generator driver for STM32H533
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************

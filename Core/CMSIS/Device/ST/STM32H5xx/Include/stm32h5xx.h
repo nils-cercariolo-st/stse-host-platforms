@@ -73,8 +73,8 @@
   /* #define STM32H563xx  */   /*!< STM32H563xx Devices   */
   /* #define STM32H562xx  */   /*!< STM32H562xx Devices   */
   /* #define STM32H503xx  */   /*!< STM32H503xx Devices   */
-  /* #define STM32H533xx  */   /*!< STM32H533xx Devices   */
-  #define STM32H523xx          /*!< STM32H523xx Devices   */
+  #define STM32H533xx          /*!< STM32H533xx Devices   */
+  /* #define STM32H523xx  */   /*!< STM32H523xx Devices   */
 #endif
 
 /*  Tip: To avoid modifying this file each time you need to switch between these

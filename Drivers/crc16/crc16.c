@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	crc16.c
- * \brief   CRC16 driver for STM32H523
+ * \brief   CRC16 driver for STM32H533
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************

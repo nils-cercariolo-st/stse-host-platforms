@@ -1,7 +1,7 @@
 ;********************************************************************************
-;* File Name          : startup_stm32h523xx.s
+;* File Name          : startup_stm32h533xx.s
 ;* Author             : MCD Application Team
-;* Description        : STM32H523xx Non Crypto Devices vector
+;* Description        : STM32H533xx Crypto Devices vector
 ;*                      This module performs:
 ;*                      - Set the initial SP
 ;*                      - Set the initial PC == _iar_program_start,
@@ -110,7 +110,7 @@ __vector_table
         DCD     GPDMA1_Channel6_IRQHandler       ; GPDMA1 Channel 6 global interrupt
         DCD     GPDMA1_Channel7_IRQHandler       ; GPDMA1 Channel 7 global interrupt
         DCD     IWDG_IRQHandler                  ; IWDG global interrupt
-        DCD     0                                ; Reserved
+        DCD     SAES_IRQHandler                  ; SAES global interrupt
         DCD     ADC1_IRQHandler                  ; ADC1 global interrupt
         DCD     DAC1_IRQHandler                  ; DAC1 global interrupt
         DCD     FDCAN1_IT0_IRQHandler            ; FDCAN1 interrupt 0
@@ -189,10 +189,10 @@ __vector_table
         DCD     0                                ; Reserved
         DCD     DTS_IRQHandler                   ; DTS global interrupt
         DCD     RNG_IRQHandler                   ; RNG global interrupt
-        DCD     0                                ; Reserved
-        DCD     0                                ; Reserved
+        DCD     OTFDEC1_IRQHandler               ; OTFDEC1 global interrupt
+        DCD     AES_IRQHandler                   ; AES global interrupt
         DCD     HASH_IRQHandler                  ; HASH global interrupt
-        DCD     0                                ; Reserved
+        DCD     PKA_IRQHandler                   ; PKA global interrupt
         DCD     CEC_IRQHandler                   ; CEC global interrupt
         DCD     TIM12_IRQHandler                 ; TIM12 global interrupt
         DCD     0                                ; Reserved
@@ -457,6 +457,11 @@ GPDMA1_Channel7_IRQHandler
         SECTION .text:CODE:NOROOT:REORDER(1)
 IWDG_IRQHandler
         B IWDG_IRQHandler
+
+        PUBWEAK SAES_IRQHandler
+        SECTION .text:CODE:NOROOT:REORDER(1)
+SAES_IRQHandler
+        B SAES_IRQHandler
 
         PUBWEAK ADC1_IRQHandler
         SECTION .text:CODE:NOROOT:REORDER(1)
@@ -763,10 +768,25 @@ DTS_IRQHandler
 RNG_IRQHandler
         B RNG_IRQHandler
 
+        PUBWEAK OTFDEC1_IRQHandler
+        SECTION .text:CODE:NOROOT:REORDER(1)
+OTFDEC1_IRQHandler
+        B OTFDEC1_IRQHandler
+
+        PUBWEAK AES_IRQHandler
+        SECTION .text:CODE:NOROOT:REORDER(1)
+AES_IRQHandler
+        B AES_IRQHandler
+
         PUBWEAK HASH_IRQHandler
         SECTION .text:CODE:NOROOT:REORDER(1)
 HASH_IRQHandler
         B HASH_IRQHandler
+
+        PUBWEAK PKA_IRQHandler
+        SECTION .text:CODE:NOROOT:REORDER(1)
+PKA_IRQHandler
+        B PKA_IRQHandler
 
         PUBWEAK CEC_IRQHandler
         SECTION .text:CODE:NOROOT:REORDER(1)

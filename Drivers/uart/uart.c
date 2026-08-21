@@ -1,18 +1,18 @@
 /******************************************************************************
  * \file    uart.c
- * \brief   USART2 polling driver for STM32H523 (PA2/PA3)
+ * \brief   USART2 polling driver for STM32H533 (PA2/PA3)
  ******************************************************************************/
 
 #include "Drivers/uart/uart.h"
 
-#define STM32H523_HSI_HZ                    64000000UL
+#define STM32H533_HSI_HZ                    64000000UL
 
 
 static uint32_t get_hsi_clock(void) {
     uint32_t divider =
         (RCC->CR & RCC_CR_HSIDIV_Msk) >> RCC_CR_HSIDIV_Pos;
 
-    return STM32H523_HSI_HZ >> divider;
+    return STM32H533_HSI_HZ >> divider;
 }
 
 

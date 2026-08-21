@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
- * \brief  STM32H523 ST1Wire platform abstraction for PB8
+ * \brief  STM32H533 ST1Wire platform abstraction for PB8
  * \author STMicroelectronics SMD Application Team
  *****************************************************************************/
 

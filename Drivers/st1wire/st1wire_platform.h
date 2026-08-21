@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * \file   st1wire_platform.h
- * \brief  STM32H523 ST1Wire platform abstraction
+ * \brief  STM32H533 ST1Wire platform abstraction
  ******************************************************************************
  */
 

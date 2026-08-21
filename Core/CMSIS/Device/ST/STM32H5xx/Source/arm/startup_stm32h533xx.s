@@ -1,7 +1,7 @@
 ;*******************************************************************************
-;* File Name          : startup_stm32h523xx.s
+;* File Name          : startup_stm32h533xx.s
 ;* Author             : MCD Application Team
-;* Description        : STM32H523xx Non Crypto devices vector table for MDK-ARM toolchain.
+;* Description        : STM32H533xx Crypto devices vector table for MDK-ARM toolchain.
 ;*                      This module performs:
 ;*                      - Set the initial SP
 ;*                      - Set the initial PC == Reset_Handler
@@ -110,7 +110,7 @@ __Vectors       DCD     __initial_sp                     ; Top of Stack
                 DCD     GPDMA1_Channel6_IRQHandler       ; GPDMA1 Channel 6 global interrupt
                 DCD     GPDMA1_Channel7_IRQHandler       ; GPDMA1 Channel 7 global interrupt
                 DCD     IWDG_IRQHandler                  ; IWDG global interrupt
-                DCD     0                                ; Reserved
+                DCD     SAES_IRQHandler                  ; SAES global interrupt
                 DCD     ADC1_IRQHandler                  ; ADC1 global interrupt
                 DCD     DAC1_IRQHandler                  ; DAC1 global interrupt
                 DCD     FDCAN1_IT0_IRQHandler            ; FDCAN1 interrupt 0
@@ -189,10 +189,10 @@ __Vectors       DCD     __initial_sp                     ; Top of Stack
                 DCD     0                                ; Reserved
                 DCD     DTS_IRQHandler                   ; DTS global interrupt
                 DCD     RNG_IRQHandler                   ; RNG global interrupt
-                DCD     0                                ; Reserved
-                DCD     0                                ; Reserved
+                DCD     OTFDEC1_IRQHandler               ; OTFDEC1 global interrupt
+                DCD     AES_IRQHandler                   ; AES global interrupt
                 DCD     HASH_IRQHandler                  ; HASH global interrupt
-                DCD     0                                ; Reserved
+                DCD     PKA_IRQHandler                   ; PKA global interrupt
                 DCD     CEC_IRQHandler                   ; CEC global interrupt
                 DCD     TIM12_IRQHandler                 ; TIM12 global interrupt
                 DCD     0                                ; Reserved
@@ -321,6 +321,7 @@ Default_Handler PROC
                 EXPORT  GPDMA1_Channel6_IRQHandler       [WEAK]
                 EXPORT  GPDMA1_Channel7_IRQHandler       [WEAK]
                 EXPORT  IWDG_IRQHandler                  [WEAK]
+                EXPORT  SAES_IRQHandler                  [WEAK]
                 EXPORT  ADC1_IRQHandler                  [WEAK]
                 EXPORT  DAC1_IRQHandler                  [WEAK]
                 EXPORT  FDCAN1_IT0_IRQHandler            [WEAK]
@@ -382,7 +383,10 @@ Default_Handler PROC
                 EXPORT  FDCAN2_IT1_IRQHandler            [WEAK]
                 EXPORT  DTS_IRQHandler                   [WEAK]
                 EXPORT  RNG_IRQHandler                   [WEAK]
+                EXPORT  OTFDEC1_IRQHandler               [WEAK]
+                EXPORT  AES_IRQHandler                   [WEAK]
                 EXPORT  HASH_IRQHandler                  [WEAK]
+                EXPORT  PKA_IRQHandler                   [WEAK]
                 EXPORT  CEC_IRQHandler                   [WEAK]
                 EXPORT  TIM12_IRQHandler                 [WEAK]
                 EXPORT  I3C1_EV_IRQHandler               [WEAK]
@@ -426,6 +430,7 @@ GPDMA1_Channel5_IRQHandler
 GPDMA1_Channel6_IRQHandler
 GPDMA1_Channel7_IRQHandler
 IWDG_IRQHandler
+SAES_IRQHandler
 ADC1_IRQHandler
 DAC1_IRQHandler
 FDCAN1_IT0_IRQHandler
@@ -487,7 +492,10 @@ FDCAN2_IT0_IRQHandler
 FDCAN2_IT1_IRQHandler
 DTS_IRQHandler
 RNG_IRQHandler
+OTFDEC1_IRQHandler
+AES_IRQHandler
 HASH_IRQHandler
+PKA_IRQHandler
 CEC_IRQHandler
 TIM12_IRQHandler
 I3C1_EV_IRQHandler

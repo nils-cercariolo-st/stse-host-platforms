@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * \file    st1wire_timer.h
- * \brief   STM32H523 ST1Wire TIM4 backend (CH1 timebase, CH3 TX, CH4 RX)
+ * \brief   STM32H533 ST1Wire TIM4 backend (CH1 timebase, CH3 TX, CH4 RX)
  ******************************************************************************
  */
 

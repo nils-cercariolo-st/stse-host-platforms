@@ -1,6 +1,6 @@
 /******************************************************************************
  * \file	uart.h
- * \brief   UART driver for STM32H523
+ * \brief   UART driver for STM32H533
  * \author  STMicroelectronics - CS application team
  *
  ******************************************************************************
